@@ -3,7 +3,7 @@
 // device the player is holding right now.
 import { preferences } from "./preferences";
 import { bindLabel, type BindAction } from "./bindings";
-import { device } from "./device";
+import { device, type DeviceState } from "./device";
 import { glyph, stickGlyph, type PadAction, type PadFamily } from "./pad";
 
 /** the glyph set prompts use: the player's choice, else the connected controller's family */
@@ -17,9 +17,9 @@ export function padText(action: PadAction, index?: number) {
 }
 
 /** every key of `action` ("E / F"), or just its `index`-th one (falling back to the primary) — controller glyphs while
- *  the player is on a controller */
-export function bindingText(action: BindAction, index?: number) {
-  if (device.pad) {
+ *  the player is on a controller. Pass a device explicitly to preview its bindings. */
+export function bindingText(action: BindAction, index?: number, kind: DeviceState["kind"] = device.value.kind) {
+  if (kind === "pad") {
     if (action === "fwd" || action === "back" || action === "left" || action === "right") return stickGlyph(preferences.value.pad.swapSticks ? "right" : "left", glyphFamily());
     if (action === "slots" || action === "seats") return "";   // (a controller cycles seats with crouch)
     // reload without its own button: the interact button reloads when there is nothing to take
@@ -30,8 +30,8 @@ export function bindingText(action: BindAction, index?: number) {
   if (!codes.length) return "—";
   return index === undefined ? codes.map(bindLabel).join(" / ") : bindLabel(codes[index] ?? codes[0]);
 }
-/** what the player looks / steers with: "MOUSE" or the look stick */
-export function lookText() { return device.pad ? stickGlyph(preferences.value.pad.swapSticks ? "left" : "right", glyphFamily()) : "MOUSE"; }
+/** what the player looks / steers with for the active or previewed device */
+export function lookText(kind: DeviceState["kind"] = device.value.kind) { return kind === "pad" ? stickGlyph(preferences.value.pad.swapSticks ? "left" : "right", glyphFamily()) : "MOUSE"; }
 /** a helicopter's collective as labelled on this device: up (jump / the right trigger) and down (sprint / the left trigger) */
 export function climbText() { return device.pad ? padText("fire", 0) || "RT" : bindingText("jump", 0); }
 export function descendText() { return device.pad ? padText("aim", 0) || "LT" : bindingText("sprint", 0); }
